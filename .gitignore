@@ -1,0 +1,13 @@
+assembler/assembler
+assembler/parser.tab.c
+assembler/parser.tab.h
+assembler/lex.yy.c
+
+compiler/backend/*.md
+compiler/mosml
+*.txt
+*.o
+*.out
+*.ui
+*.uo
+emulator/emulator
