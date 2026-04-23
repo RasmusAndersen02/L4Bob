@@ -1,0 +1,24 @@
+function fib2
+
+Begin |> 0:0 n:u16
+0:0 0:u16 1:u16 n:u16 |> Fib2
+
+Fib2 L1 |> c:b x:u16 y:u16 m:u16
+c:b |> = 0:u16 x:u16 |> 1:b
+0:b |> < 0:u16 m:u16 |> c1:b
+c1:b x:u16 y:u16 m:u16 |> L3 L2
+
+L2 |> 0:0 x1:u16 y1:u16 m1:u16
+m1:u16 |> - 1:u16|> m2:u16
+x1:u16 |> + y1:u16|> y2:u16
+0:0 y1:u16 y2:u16 m2:u16 |> L1
+
+L3 |> 0:0 a:u16 b:u16 0:u16
+0:0 a:u16 b:u16 |> End
+
+
+
+
+
+
+

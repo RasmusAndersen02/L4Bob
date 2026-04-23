@@ -1,0 +1,13 @@
+_start_
+ADD1 reg1
+BGEZ reg1, target1
+_target2_
+XOR reg2, reg1
+ADD reg1, reg2
+XORI reg1, 1 
+BODD reg1, end
+_target1_
+NEG reg1
+BLZ reg1, target2
+_end_
+

@@ -1,0 +1,11 @@
+_start_
+ADD1 reg1
+ADD1 reg1
+ADD1 reg1
+ADD1 reg1
+SUB1 reg1
+SUB1 reg1
+SUB1 reg1
+SUB1 reg1
+RSWB reg0
+

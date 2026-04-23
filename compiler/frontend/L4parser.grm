@@ -1,0 +1,85 @@
+%{
+
+%}
+
+%token <string*(int*int)> NUM
+%token <string*(int*int)> ID LABEL
+%token <(int*int)> CALL UNCALL PIPE COLON FUNCTION NEWLINE EOF
+
+
+%start Program
+%type <L4.program> Program
+%type <L4.func> Func
+%type <L4.func list> Funcs
+%type <L4.block> Block
+%type <L4.block list> Blocks
+%type <L4.entry> Entry
+%type <L4.exit> Exit
+%type <L4.instr> Instr
+%type <L4.instr list> Instrs
+%type <L4.args> Args
+%type <L4.decl> Decl
+%type <string list> Labels
+%type <unit> Newlines
+
+%%
+
+Func : FUNCTION ID Args Newlines Blocks
+			{ (#1 $2, $3, $5, $1) }
+     | Newlines FUNCTION ID Args Newlines Blocks
+			{ (#1 $3, $4, $6, $2) }
+;
+
+Funcs : Func            { [$1] }
+      | Func Funcs      { $1 :: $2 }
+;
+
+Program : Funcs EOF	{ $1 }
+;
+
+Block : Entry Instrs Exit
+                        { ($1, $2, $3) }
+;
+
+Blocks : Block          { [$1] }
+       | Block Blocks   { $1 :: $2 }
+;
+
+Entry : Labels PIPE Args Newlines
+                        { ($1, $3, $2) }
+;
+
+Labels : LABEL             { [#1 $1] }
+       | LABEL Labels      { #1 $1 :: $2 }
+;
+
+Exit : Args PIPE Labels Newlines
+                        { ($1, $3, $2) }
+;
+
+Instr : Args PIPE ID Args PIPE Args Newlines
+                        { L4.Prim (#1 $3, $1, $4, $6, $2) }
+      | Args PIPE CALL ID Args PIPE Args Newlines
+                        { L4.Call (#1 $4, $1, $5, $7, $2) }
+      | Args PIPE UNCALL ID Args PIPE Args Newlines
+                        { L4.Uncall (#1 $4, $1, $5, $7, $2) }
+;
+
+Instrs :                { [] }
+       | Instrs Instr   { $1 @  [$2] }
+;
+
+Args :   		{ [] }
+     | Decl Args        { $1 :: $2 }
+;
+
+Decl : NUM COLON ID	{ L4.ConstD (#1 $1, #1 $3) }
+     | ID COLON ID      { L4.VarD (#1 $1, #1 $3) }
+     | NUM COLON NUM	{ L4.ConstD (#1 $1, #1 $3) }
+     | ID COLON NUM     { L4.VarD (#1 $1, #1 $3) }
+;
+
+Newlines : NEWLINE      { () }
+         | NEWLINE Newlines
+			{ () }
+;

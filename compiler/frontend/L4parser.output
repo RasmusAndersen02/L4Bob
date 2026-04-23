@@ -1,0 +1,611 @@
+   0  $accept : %entry% $end
+
+   1  Func : FUNCTION ID Args Newlines Blocks
+   2       | Newlines FUNCTION ID Args Newlines Blocks
+
+   3  Funcs : Func
+   4        | Func Funcs
+
+   5  Program : Funcs EOF
+
+   6  Block : Entry Instrs Exit
+
+   7  Blocks : Block
+   8         | Block Blocks
+
+   9  Entry : Labels PIPE Args Newlines
+
+  10  Labels : LABEL
+  11         | LABEL Labels
+
+  12  Exit : Args PIPE Labels Newlines
+
+  13  Instr : Args PIPE ID Args PIPE Args Newlines
+  14        | Args PIPE CALL ID Args PIPE Args Newlines
+  15        | Args PIPE UNCALL ID Args PIPE Args Newlines
+
+  16  Instrs :
+  17         | Instrs Instr
+
+  18  Args :
+  19       | Decl Args
+
+  20  Decl : NUM COLON ID
+  21       | ID COLON ID
+  22       | NUM COLON NUM
+  23       | ID COLON NUM
+
+  24  Newlines : NEWLINE
+  25           | NEWLINE Newlines
+
+  26  %entry% : '\001' Program
+
+state 0
+	$accept : . %entry% $end  (0)
+
+	'\001'  shift 1
+	.  error
+
+	%entry%  goto 2
+
+
+state 1
+	%entry% : '\001' . Program  (26)
+
+	FUNCTION  shift 3
+	NEWLINE  shift 4
+	.  error
+
+	Program  goto 5
+	Func  goto 6
+	Funcs  goto 7
+	Newlines  goto 8
+
+
+state 2
+	$accept : %entry% . $end  (0)
+
+	$end  accept
+
+
+state 3
+	Func : FUNCTION . ID Args Newlines Blocks  (1)
+
+	ID  shift 9
+	.  error
+
+
+4: shift/reduce conflict (shift 4, reduce 24) on NEWLINE
+state 4
+	Newlines : NEWLINE .  (24)
+	Newlines : NEWLINE . Newlines  (25)
+
+	NEWLINE  shift 4
+	EOF  reduce 24
+	FUNCTION  reduce 24
+	ID  reduce 24
+	LABEL  reduce 24
+	NUM  reduce 24
+	PIPE  reduce 24
+
+	Newlines  goto 10
+
+
+state 5
+	%entry% : '\001' Program .  (26)
+
+	.  reduce 26
+
+
+state 6
+	Funcs : Func .  (3)
+	Funcs : Func . Funcs  (4)
+
+	FUNCTION  shift 3
+	NEWLINE  shift 4
+	EOF  reduce 3
+
+	Func  goto 6
+	Funcs  goto 11
+	Newlines  goto 8
+
+
+state 7
+	Program : Funcs . EOF  (5)
+
+	EOF  shift 12
+	.  error
+
+
+state 8
+	Func : Newlines . FUNCTION ID Args Newlines Blocks  (2)
+
+	FUNCTION  shift 13
+	.  error
+
+
+state 9
+	Func : FUNCTION ID . Args Newlines Blocks  (1)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	NEWLINE  reduce 18
+
+	Args  goto 16
+	Decl  goto 17
+
+
+state 10
+	Newlines : NEWLINE Newlines .  (25)
+
+	.  reduce 25
+
+
+state 11
+	Funcs : Func Funcs .  (4)
+
+	.  reduce 4
+
+
+state 12
+	Program : Funcs EOF .  (5)
+
+	.  reduce 5
+
+
+state 13
+	Func : Newlines FUNCTION . ID Args Newlines Blocks  (2)
+
+	ID  shift 18
+	.  error
+
+
+state 14
+	Decl : ID . COLON ID  (21)
+	Decl : ID . COLON NUM  (23)
+
+	COLON  shift 19
+	.  error
+
+
+state 15
+	Decl : NUM . COLON ID  (20)
+	Decl : NUM . COLON NUM  (22)
+
+	COLON  shift 20
+	.  error
+
+
+state 16
+	Func : FUNCTION ID Args . Newlines Blocks  (1)
+
+	NEWLINE  shift 4
+	.  error
+
+	Newlines  goto 21
+
+
+state 17
+	Args : Decl . Args  (19)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	NEWLINE  reduce 18
+	PIPE  reduce 18
+
+	Args  goto 22
+	Decl  goto 17
+
+
+state 18
+	Func : Newlines FUNCTION ID . Args Newlines Blocks  (2)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	NEWLINE  reduce 18
+
+	Args  goto 23
+	Decl  goto 17
+
+
+state 19
+	Decl : ID COLON . ID  (21)
+	Decl : ID COLON . NUM  (23)
+
+	ID  shift 24
+	NUM  shift 25
+	.  error
+
+
+state 20
+	Decl : NUM COLON . ID  (20)
+	Decl : NUM COLON . NUM  (22)
+
+	ID  shift 26
+	NUM  shift 27
+	.  error
+
+
+state 21
+	Func : FUNCTION ID Args Newlines . Blocks  (1)
+
+	LABEL  shift 28
+	.  error
+
+	Block  goto 29
+	Blocks  goto 30
+	Entry  goto 31
+	Labels  goto 32
+
+
+state 22
+	Args : Decl Args .  (19)
+
+	.  reduce 19
+
+
+state 23
+	Func : Newlines FUNCTION ID Args . Newlines Blocks  (2)
+
+	NEWLINE  shift 4
+	.  error
+
+	Newlines  goto 33
+
+
+state 24
+	Decl : ID COLON ID .  (21)
+
+	.  reduce 21
+
+
+state 25
+	Decl : ID COLON NUM .  (23)
+
+	.  reduce 23
+
+
+state 26
+	Decl : NUM COLON ID .  (20)
+
+	.  reduce 20
+
+
+state 27
+	Decl : NUM COLON NUM .  (22)
+
+	.  reduce 22
+
+
+state 28
+	Labels : LABEL .  (10)
+	Labels : LABEL . Labels  (11)
+
+	LABEL  shift 28
+	NEWLINE  reduce 10
+	PIPE  reduce 10
+
+	Labels  goto 34
+
+
+state 29
+	Blocks : Block .  (7)
+	Blocks : Block . Blocks  (8)
+
+	LABEL  shift 28
+	EOF  reduce 7
+	FUNCTION  reduce 7
+	NEWLINE  reduce 7
+
+	Block  goto 29
+	Blocks  goto 35
+	Entry  goto 31
+	Labels  goto 32
+
+
+state 30
+	Func : FUNCTION ID Args Newlines Blocks .  (1)
+
+	.  reduce 1
+
+
+state 31
+	Block : Entry . Instrs Exit  (6)
+	Instrs : .  (16)
+
+	.  reduce 16
+
+	Instrs  goto 36
+
+
+state 32
+	Entry : Labels . PIPE Args Newlines  (9)
+
+	PIPE  shift 37
+	.  error
+
+
+state 33
+	Func : Newlines FUNCTION ID Args Newlines . Blocks  (2)
+
+	LABEL  shift 28
+	.  error
+
+	Block  goto 29
+	Blocks  goto 38
+	Entry  goto 31
+	Labels  goto 32
+
+
+state 34
+	Labels : LABEL Labels .  (11)
+
+	.  reduce 11
+
+
+state 35
+	Blocks : Block Blocks .  (8)
+
+	.  reduce 8
+
+
+state 36
+	Block : Entry Instrs . Exit  (6)
+	Instrs : Instrs . Instr  (17)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	PIPE  reduce 18
+
+	Exit  goto 39
+	Instr  goto 40
+	Args  goto 41
+	Decl  goto 17
+
+
+state 37
+	Entry : Labels PIPE . Args Newlines  (9)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	NEWLINE  reduce 18
+
+	Args  goto 42
+	Decl  goto 17
+
+
+state 38
+	Func : Newlines FUNCTION ID Args Newlines Blocks .  (2)
+
+	.  reduce 2
+
+
+state 39
+	Block : Entry Instrs Exit .  (6)
+
+	.  reduce 6
+
+
+state 40
+	Instrs : Instrs Instr .  (17)
+
+	.  reduce 17
+
+
+state 41
+	Exit : Args . PIPE Labels Newlines  (12)
+	Instr : Args . PIPE ID Args PIPE Args Newlines  (13)
+	Instr : Args . PIPE CALL ID Args PIPE Args Newlines  (14)
+	Instr : Args . PIPE UNCALL ID Args PIPE Args Newlines  (15)
+
+	PIPE  shift 43
+	.  error
+
+
+state 42
+	Entry : Labels PIPE Args . Newlines  (9)
+
+	NEWLINE  shift 4
+	.  error
+
+	Newlines  goto 44
+
+
+state 43
+	Exit : Args PIPE . Labels Newlines  (12)
+	Instr : Args PIPE . ID Args PIPE Args Newlines  (13)
+	Instr : Args PIPE . CALL ID Args PIPE Args Newlines  (14)
+	Instr : Args PIPE . UNCALL ID Args PIPE Args Newlines  (15)
+
+	CALL  shift 45
+	ID  shift 46
+	LABEL  shift 28
+	UNCALL  shift 47
+	.  error
+
+	Labels  goto 48
+
+
+state 44
+	Entry : Labels PIPE Args Newlines .  (9)
+
+	.  reduce 9
+
+
+state 45
+	Instr : Args PIPE CALL . ID Args PIPE Args Newlines  (14)
+
+	ID  shift 49
+	.  error
+
+
+state 46
+	Instr : Args PIPE ID . Args PIPE Args Newlines  (13)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	PIPE  reduce 18
+
+	Args  goto 50
+	Decl  goto 17
+
+
+state 47
+	Instr : Args PIPE UNCALL . ID Args PIPE Args Newlines  (15)
+
+	ID  shift 51
+	.  error
+
+
+state 48
+	Exit : Args PIPE Labels . Newlines  (12)
+
+	NEWLINE  shift 4
+	.  error
+
+	Newlines  goto 52
+
+
+state 49
+	Instr : Args PIPE CALL ID . Args PIPE Args Newlines  (14)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	PIPE  reduce 18
+
+	Args  goto 53
+	Decl  goto 17
+
+
+state 50
+	Instr : Args PIPE ID Args . PIPE Args Newlines  (13)
+
+	PIPE  shift 54
+	.  error
+
+
+state 51
+	Instr : Args PIPE UNCALL ID . Args PIPE Args Newlines  (15)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	PIPE  reduce 18
+
+	Args  goto 55
+	Decl  goto 17
+
+
+state 52
+	Exit : Args PIPE Labels Newlines .  (12)
+
+	.  reduce 12
+
+
+state 53
+	Instr : Args PIPE CALL ID Args . PIPE Args Newlines  (14)
+
+	PIPE  shift 56
+	.  error
+
+
+state 54
+	Instr : Args PIPE ID Args PIPE . Args Newlines  (13)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	NEWLINE  reduce 18
+
+	Args  goto 57
+	Decl  goto 17
+
+
+state 55
+	Instr : Args PIPE UNCALL ID Args . PIPE Args Newlines  (15)
+
+	PIPE  shift 58
+	.  error
+
+
+state 56
+	Instr : Args PIPE CALL ID Args PIPE . Args Newlines  (14)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	NEWLINE  reduce 18
+
+	Args  goto 59
+	Decl  goto 17
+
+
+state 57
+	Instr : Args PIPE ID Args PIPE Args . Newlines  (13)
+
+	NEWLINE  shift 4
+	.  error
+
+	Newlines  goto 60
+
+
+state 58
+	Instr : Args PIPE UNCALL ID Args PIPE . Args Newlines  (15)
+	Args : .  (18)
+
+	ID  shift 14
+	NUM  shift 15
+	NEWLINE  reduce 18
+
+	Args  goto 61
+	Decl  goto 17
+
+
+state 59
+	Instr : Args PIPE CALL ID Args PIPE Args . Newlines  (14)
+
+	NEWLINE  shift 4
+	.  error
+
+	Newlines  goto 62
+
+
+state 60
+	Instr : Args PIPE ID Args PIPE Args Newlines .  (13)
+
+	.  reduce 13
+
+
+state 61
+	Instr : Args PIPE UNCALL ID Args PIPE Args . Newlines  (15)
+
+	NEWLINE  shift 4
+	.  error
+
+	Newlines  goto 63
+
+
+state 62
+	Instr : Args PIPE CALL ID Args PIPE Args Newlines .  (14)
+
+	.  reduce 14
+
+
+state 63
+	Instr : Args PIPE UNCALL ID Args PIPE Args Newlines .  (15)
+
+	.  reduce 15
+
+
+State 4 contains 1 shift/reduce conflict.
+
+
+13 terminals, 15 nonterminals
+27 grammar rules, 64 states
