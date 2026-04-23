@@ -1,0 +1,73 @@
+signature L4utils =
+sig
+  (* aliases *)
+  type ID = int
+  type TID = int * int
+  type Var = string
+  type Label = string
+
+  (* generic structures *)
+  type VarSet = Var Binaryset.set
+
+  (* datatypes *)
+  datatype Dir = Entries | Exits
+
+  (* records *)
+  type UseDef =
+    { uses : VarSet
+    , defs : VarSet
+    }
+
+  type Live =
+    { live_in : VarSet
+    , live_out : VarSet
+    }
+
+  type EdgeArgs =
+    { source_exits_decl : L4.decl list
+    , target_entries_decl : L4.decl list
+    , source_exits : Var list
+    , target_entries : Var list
+    }
+
+  type Boundary =
+    { entry_vars_ordered : Var list
+    , exit_vars_ordered : Var list
+    , entry_vars : VarSet
+    , exit_vars : VarSet
+    }
+
+  type InstrInfo =
+    { id : TID
+    , instr : L4.instr
+    , ud : UseDef
+    , lv : Live
+    }
+
+  (* maps *)
+  type EdgeArgsMap = (TID, EdgeArgs) Binarymap.dict
+  type Cfg = (ID list * ID list) Intmap.intmap
+
+  (* orders *)
+  val tuple_id_ord : TID * TID -> order
+
+  (* initializers *)
+  val ini_varset : unit -> VarSet
+  val ini_tid_map : unit -> (TID, 'a) Binarymap.dict
+  val ini_str_map : unit -> (string, 'a) Binarymap.dict
+
+  (* converters *)
+  val from_varlist_to_varset : Var list -> VarSet
+  val from_decl_to_var : L4.decl -> Var option
+  val from_decllist_to_varlist : L4.decl list -> Var list
+  val from_decllist_to_varset : L4.decl list -> VarSet
+
+  (* getters *)
+  val get_block_labels : L4.block * Dir -> Label list
+  val get_block_decls : L4.block * Dir -> L4.decl list
+  val get_block_vars : L4.block * Dir -> Var list
+
+  (* mappers *)
+  val map_id_to_block : L4.block list -> L4.block Intmap.intmap
+  val map_label_to_id : L4.block Intmap.intmap * Dir -> (Label, ID) Binarymap.dict
+end

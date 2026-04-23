@@ -6,16 +6,16 @@ frontend/L4.sml
 frontend/L4check.sml
 frontend/L4type.sml
 
-backend/L4analysis_types.sig
-backend/L4analysis_types.sml
-backend/L4cfg_new.sig
-backend/L4cfg_new.sml
-backend/L4liveness_new.sig
-backend/L4liveness_new.sml
-backend/L4interference_new.sig
-backend/L4interference_new.sml
-backend/L4regalloc_new.sig
-backend/L4regalloc_new.sml
+backend/L4utils.sig
+backend/L4utils.sml
+backend/L4cfg.sig
+backend/L4cfg.sml
+backend/L4liveness.sig
+backend/L4liveness.sml
+backend/L4interference.sig
+backend/L4interference.sml
+backend/L4regalloc.sig
+backend/L4regalloc.sml
 backend/L4emit.sig
 backend/L4emit.sml
 backend/L4rewrite_spill.sig

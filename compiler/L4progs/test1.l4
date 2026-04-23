@@ -1,8 +1,0 @@
-function add
-
-Begin |> 0:0 a:u16 b:u16
-0:0 a:u16 b:u16 |> Calc
-
-Calc |> a:u16 b:u16
-a:u16 b:u16 |> + |> c:u16
-0:0 c:u16 |> End

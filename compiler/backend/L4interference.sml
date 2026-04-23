@@ -1,9 +1,12 @@
 structure L4interference :> L4interference =
 struct
-  type Var = L4analysis_types.Var
-  type VarSet = L4analysis_types.VarSet
-  type InstrInfo = L4analysis_types.InstrInfo
-  type InstrId = L4analysis_types.InstrId
+  type Var = L4utils.Var
+  type VarSet = L4utils.VarSet
+  type InstrInfo = L4utils.InstrInfo
+  type TID = L4utils.TID
+
+  type EdgeArgs = L4cfg.EdgeArgs
+  type EdgeArgsMap = L4cfg.EdgeArgsMap
 
   type IGraph = (Var, VarSet) Binarymap.dict
   type Preference = Var * Var
@@ -13,12 +16,12 @@ struct
   fun peek_value_or_init (graph : IGraph, key : Var) : VarSet =
     case Binarymap.peek (graph, key) of
       SOME interferences => interferences
-    | NONE => L4analysis_types.empty_varset ()
+    | NONE => L4utils.ini_varset ()
 
   fun peek_key_or_insert (graph : IGraph, key : Var) : IGraph =
     case Binarymap.peek (graph, key) of
       SOME _ => graph
-    | NONE => Binarymap.insert (graph, key, L4analysis_types.empty_varset ())
+    | NONE => Binarymap.insert (graph, key, L4utils.ini_varset ())
 
   fun add_undirected_edge 
     (graph : IGraph, vertex1 : Var, vertex2 : Var) 
@@ -60,21 +63,24 @@ struct
 
     (*from liveness: fun analyze*)
   fun build_instr_mapping 
-    (instr_map : (InstrId, InstrInfo) Binarymap.dict) 
+    (instr_map : (TID, InstrInfo) Binarymap.dict) 
     : IGraph =
     Binarymap.foldl
       (fn (_, info, graph_accum) => add_edges_for_instr (info, graph_accum))
-      empty_graph()
+      (empty_graph ())
       instr_map
 
-  fun coalesce_boundaries (edge_args : L4cfg.EdgeArgs list) : Preference list =
-    (* Improvement: produce coalescing preferences from positional boundary mapping. *)
-    List.concat
-      (List.map
-        (fn (edge_arg : L4cfg.EdgeArgs) =>
-            ListPair.zipEq (#source_exits edge_arg, #target_entries edge_arg))
-        edge_args)
+  fun coalesce_boundaries (edge_args : (TID, L4cfg.EdgeArgs) Binarymap.dict) : Preference list =
+    (*
+     * For each CFG edge, create coalescing preferences from positional
+     * source-exit/target-entry argument pairs.
+     *)
+    Binarymap.foldl
+      (fn (_, edge_arg, acc) =>
+        ListPair.zipEq (#source_exits edge_arg, #target_entries edge_arg) @ acc)
+      []
+      edge_args
   (*TODO: *)
-  fun coalesce_two_addr_instrs = []
+  val coalesce_two_addr_instrs = []
     
 end

@@ -1,25 +1,26 @@
 signature L4liveness =
 sig
-  type BlockId = L4analysis_types.BlockId
-  type InstrId = L4analysis_types.InstrId
-  type Var = L4analysis_types.Var
-  type VarSet = L4analysis_types.VarSet
-  type Boundary = L4analysis_types.Boundary
-  type UseDef = L4analysis_types.UseDef
-  type Live = L4analysis_types.Live
-  type InstrInfo = L4analysis_types.InstrInfo
+  type ID = L4utils.ID
+  type TID = L4utils.TID
+  type Var = L4utils.Var
+  type VarSet = L4utils.VarSet
+  type Boundary = L4utils.Boundary
+  type UseDef = L4utils.UseDef
+  type Live = L4utils.Live
+  type InstrInfo = L4utils.InstrInfo
 
   type Cfg = L4cfg.Cfg
   type EdgeArgs = L4cfg.EdgeArgs
+  type EdgeArgsMap = (TID, EdgeArgs) Binarymap.dict
 
   type Result =
     { boundary_by_block : Boundary Intmap.intmap
     , block_live : Live Intmap.intmap
-    , instr_live : (InstrId, InstrInfo) Binarymap.dict
+    , instr_live : (TID, InstrInfo) Binarymap.dict
     }
 
   val use_def_of_instr : L4.instr -> UseDef
   val live_of_instr : UseDef * Live -> Live
   val build_boundary : L4.block -> Boundary
-  val analyze : L4.block list * Cfg * EdgeArgs list -> Result
+  val analyze : L4.block list * Cfg * EdgeArgsMap -> Result
 end

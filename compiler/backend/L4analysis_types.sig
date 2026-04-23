@@ -1,9 +1,9 @@
 signature L4analysis_types =
 sig
-  type BlockId = int
+  type ID = int
+  type TID = int * int
   type Var = string
   type Label = string
-  type InstrId = BlockId * int
 
   type VarSet = Var Binaryset.set
 
@@ -25,7 +25,7 @@ sig
     }
 
   type InstrInfo =
-    { id : InstrId
+    { id : TID
     , instr : L4.instr
     , ud : UseDef
     , lv : Live
@@ -33,5 +33,5 @@ sig
 
   val empty_varset : unit -> VarSet
   val varset_of_list : Var list -> VarSet
-  val instr_id_ord : InstrId * InstrId -> order
+  val tuple_id_ord : TID * TID -> order
 end

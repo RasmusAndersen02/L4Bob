@@ -1,9 +1,9 @@
 structure L4analysis_types :> L4analysis_types =
 struct
-  type BlockId = int
+  type ID = int
+  type TID = int * int
   type Var = string
   type Label = string
-  type InstrId = BlockId * int
 
   type VarSet = Var Binaryset.set
 
@@ -25,7 +25,7 @@ struct
     }
 
   type InstrInfo =
-    { id : InstrId
+    { id : TID
     , instr : L4.instr
     , ud : UseDef
     , lv : Live
@@ -35,7 +35,7 @@ struct
   fun varset_of_list (vars : Var list) : VarSet =
     Binaryset.addList (empty_varset (), vars)
 
-  fun instr_id_ord ((b1, i1) : InstrId, (b2, i2) : InstrId) : order =
+  fun tuple_id_ord ((b1, i1) : TID, (b2, i2) : TID) : order =
     if b1 < b2 then LESS
     else if b1 > b2 then GREATER
     else if i1 < i2 then LESS
