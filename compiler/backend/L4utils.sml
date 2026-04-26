@@ -19,11 +19,6 @@ struct
   type Live =
     { live_in : VarSet
     , live_out : VarSet }
-  type EdgeArgs =
-    { source_exits_decl : L4.decl list
-    , target_entries_decl : L4.decl list
-    , source_exits : Var list
-    , target_entries : Var list }
   type Boundary =
     { entry_vars_ordered : Var list
     , exit_vars_ordered : Var list
@@ -34,14 +29,11 @@ struct
     , instr : L4.instr
     , ud : UseDef
     , lv : Live }
-
+  type EdgeArgs = (L4.decl * L4.decl) list 
+    (* { source_exit_args : L4.args *)
+    (* , target_entry_args : L4.args *)
+    (* } *)
   (*maps*)
-  type EdgeArgs =
-    { source_exits_decl : L4.decl list
-    , target_entries_decl : L4.decl list
-    , source_exits : Var list
-    , target_entries : Var list
-    }
   type EdgeArgsMap = (TID, EdgeArgs) Binarymap.dict
   type Cfg = (ID list * ID list) Intmap.intmap
 
@@ -134,7 +126,4 @@ struct
 
 
 end
-
-
-
 

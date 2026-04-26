@@ -19,10 +19,9 @@ struct
     , instr_live : (TID, InstrInfo) Binarymap.dict
     }
 
-  val decl_to_var = L4utils.from_decl_to_var
   val vars_of_decls = L4utils.from_decllist_to_varlist
 
-  val set_of_decls = L4utils.from_decllist_to_varset
+  val from_decllist_to_varset = L4utils.from_decllist_to_varset
 
 fun build_boundary (block : L4.block) : Boundary =
     let
@@ -47,7 +46,7 @@ fun build_boundary (block : L4.block) : Boundary =
       { uses = set_of_decls (in_args @ ro_args)
       , defs = set_of_decls out_args }
 
-  fun live_of_instr (use_def : UseDef, live_succ : Live) : Live =
+  fun build_instr_live (use_def : UseDef, live_succ : Live) : Live =
     let
       val uses = #uses use_def
       val defs = #defs use_def
@@ -59,30 +58,23 @@ fun build_boundary (block : L4.block) : Boundary =
 
   fun empty_set () : VarSet = L4utils.ini_varset ()
 
-  fun is_empty_set (s : VarSet) : bool =
-    Binaryset.foldl (fn (_, _) => false) true s
-
   fun set_equal (s1 : VarSet, s2 : VarSet) : bool =
-    is_empty_set (Binaryset.difference (s1, s2))
+    Binaryset.isEmpty (Binaryset.difference (s1, s2))
     andalso
-    is_empty_set (Binaryset.difference (s2, s1))
+    Binaryset.isEmpty (Binaryset.difference (s2, s1))
 
-  (*
-   * Runs the standard backward instruction transfer inside one block:
-   * given OUT at block exit, compute IN at block entry.
-   *)
-  fun block_in_from_out (block : L4.block, out0 : VarSet) : VarSet =
+  fun block_in_from_out (block : L4.block, init_out_set : VarSet) : VarSet =
     let
       val (_, instrs, _) = block
     in
       List.foldr
-        (fn (instr, out_set) =>
+        (fn (instr, out_set_accum) =>
           let
             val ud = use_def_of_instr instr
           in
-            Binaryset.union (#uses ud, Binaryset.difference (out_set, #defs ud))
+            Binaryset.union (#uses ud, Binaryset.difference (out_set_accum, #defs ud))
           end)
-        out0
+        init_out_set
         instrs
     end
 
@@ -91,50 +83,39 @@ fun build_boundary (block : L4.block) : Boundary =
    * using positional boundary arguments. Variables not in target entry are treated
    * as passthrough outliers and kept as-is.
    *)
-  fun edge_contrib
-    (edge_args : EdgeArgsMap, source_id : ID, target_id : ID, succ_in : VarSet)
+  fun edge_live_transfer
+    (edge_args: EdgeArgsMap, source_id: ID, target_id: ID, succ_live_in: VarSet)
     : VarSet =
-    case Binarymap.peek (edge_args, (source_id, target_id)) of
-      NONE => empty_set ()
-    | SOME edge =>
-        let
-          val source_exit_decls = #source_exits_decl edge
-          val target_entry_decls = #target_entries_decl edge
+    let
+      fun map_edge_args (edge: EdgeArgs) : VarSet =
+        let 
+          val (live_part, dead_part) =
+            List.partition
+              (fn (_, trg_decl) => 
+                Binaryset.member (succ_live_in, L4utils.from_decl_to_var
+                (trg_decl)))
+              edge
+          val (source_live_decls, target_live_decls) = live_part 
+          val (_, target_dead_decls) = dead_part 
+          val source_live_vars = L4utils.from_decllist_to_varset (source_live_decls) 
+          val source_dead_vars = L4utils.from_decllist_to_varset (target_dead_decls) 
+          val passthroughs = Binaryset.difference (succ_live_in, dead_part)
+        in 
+          Binaryset.union (source_live_vars, passthroughs)
+      end
 
-          fun arity_mismatch () : 'a =
-            raise Fail (
-              "L4liveness.edge_contrib: edge arity mismatch on edge "
-              ^ Int.toString source_id ^ " -> " ^ Int.toString target_id
-              ^ " (source exit arity = " ^ Int.toString (List.length source_exit_decls)
-              ^ ", target entry arity = " ^ Int.toString (List.length target_entry_decls)
-              ^ ")")
+      (* is there an edge between the blocks  *)
+      fun check_edge () = 
+        case Binarymap.peek (edge_args, (source_id, target_id)) of
+          NONE => L4utils.ini_varset ()
+        | SOME edge => map_edge_args (edge) 
+      fun 
 
-          fun map_boundary_args ([], [], acc : VarSet) : VarSet = acc
-            | map_boundary_args (src_decl :: src_rest, tgt_decl :: tgt_rest, acc) =
-                let
-                  val next_acc =
-                    case tgt_decl of
-                      L4.VarD (tgt_var, _) =>
-                        if Binaryset.member (succ_in, tgt_var) then
-                          (case src_decl of
-                             L4.VarD (src_var, _) => Binaryset.add (acc, src_var)
-                           | L4.ConstD _ => acc)
-                        else
-                          acc
-                    | L4.ConstD _ => acc
-                in
-                  map_boundary_args (src_rest, tgt_rest, next_acc)
-                end
-            | map_boundary_args _ = arity_mismatch ()
+        
 
-          val mapped = map_boundary_args (source_exit_decls, target_entry_decls, empty_set ())
+    in
 
-          val target_entries = #target_entries edge
-          val target_entry_set = L4utils.from_varlist_to_varset target_entries
-          val passthrough = Binaryset.difference (succ_in, target_entry_set)
-        in
-          Binaryset.union (mapped, passthrough)
-        end
+  end
 
   (*
    * Fixed-point block liveness seed.

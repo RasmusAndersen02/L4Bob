@@ -20,7 +20,7 @@ sig
     }
 
   val use_def_of_instr : L4.instr -> UseDef
-  val live_of_instr : UseDef * Live -> Live
+  val build_instr_live : UseDef * Live -> Live
   val build_boundary : L4.block -> Boundary
   val analyze : L4.block list * Cfg * EdgeArgsMap -> Result
 end

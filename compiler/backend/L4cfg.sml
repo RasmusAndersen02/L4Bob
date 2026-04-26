@@ -60,34 +60,41 @@ struct
     : EdgeArgsMap =
     let
       val init_edge_map = L4utils.ini_tid_map ()
+      (*for every block*)
+      fun build_b2b_edge 
+        (src_exits: L4.args , target_id: ID)
+        : EdgeArgs = 
+        let 
+          val trg_block = Intmap.retrieve (block_map, target_id)
+          val trg_exits = get_block_decls (trg_block, Entries)
+        in 
+          (* {source_exit_args = src_exits, target_entry_args = trg_exits} *)
+          ListPair.zipEq(src_exits, trg_exits)
+        end
 
-      fun add_edges_for_block
-        (source_id : ID, (_, succs) : ID list * ID list, accum : EdgeArgsMap)
-        : EdgeArgsMap =
-        case Intmap.peek (block_map, source_id) of
-          NONE => accum
-        | SOME source_block =>
-            let
-              val source_exit_decls = get_block_decls (source_block, Exits)
-              val source_exits = get_block_vars (source_block, Exits)
-
-              fun add_edge (target_id : ID, edge_accum : EdgeArgsMap) : EdgeArgsMap =
-                case Intmap.peek (block_map, target_id) of
-                  NONE => edge_accum
-                | SOME target_block =>
-                    Binarymap.insert
-                      ( edge_accum
-                      , (source_id, target_id)
-                      , { source_exits_decl = source_exit_decls
-                        , target_entries_decl = get_block_decls (target_block, Entries)
-                        , source_exits = source_exits
-                        , target_entries = get_block_vars (target_block, Entries)
-                        }
-                      )
-            in
-              List.foldl add_edge accum succs
-            end
+      fun build_block_edges
+        (source_id: ID, (_, succs): ID list * ID list, edge_map: EdgeArgsMap)
+        : EdgeArgsMap=
+        let
+          val src_block = Intmap.retrieve (block_map, source_id)
+          val src_exits = get_block_decls (src_block, Exits)
+          (* val (_, succs) = Intmap.retrieve (cfg_map, source_id) *)
+        in
+          List.foldl
+            (fn (succ_id, edge_map_i) => 
+              let 
+                val b2b_edge = build_b2b_edge (src_exits, succ_id) 
+              in 
+                Binarymap.insert (edge_map_i, (source_id, succ_id), b2b_edge) 
+              end)
+            edge_map
+            succs
+        end 
     in
-      Intmap.foldl add_edges_for_block init_edge_map cfg_map
+      Intmap.foldl
+        (fn (source_id, neighbors, edge_map_i) => 
+          build_block_edges (source_id, neighbors, edge_map_i))
+        init_edge_map
+        cfg_map
     end
 end
