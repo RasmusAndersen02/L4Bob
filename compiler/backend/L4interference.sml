@@ -5,13 +5,22 @@ struct
   type InstrInfo = L4utils.InstrInfo
   type TID = L4utils.TID
 
-  type EdgeArgs = L4cfg.EdgeArgs
-  type EdgeArgsMap = L4cfg.EdgeArgsMap
+  type EdgeArgs = L4utils.EdgeArgs
+  type EdgeArgsMap = L4utils.EdgeArgsMap
 
   type IGraph = (Var, VarSet) Binarymap.dict
   type Preference = Var * Var
 
-  fun empty_graph () : IGraph = Binarymap.mkDict String.compare
+  fun interference
+    ()
+    : IGraph =
+    
+
+
+  
+
+
+  fun empty_graph () : IGraph = L4utils.ini_str_map ()
 
   fun peek_value_or_init (graph : IGraph, key : Var) : VarSet =
     case Binarymap.peek (graph, key) of
@@ -77,7 +86,13 @@ struct
      *)
     Binarymap.foldl
       (fn (_, edge_arg, acc) =>
-        ListPair.zipEq (#source_exits edge_arg, #target_entries edge_arg) @ acc)
+        List.foldl
+          (fn ((src_decl, trg_decl), acc_i) =>
+            case (L4utils.from_decl_to_var src_decl, L4utils.from_decl_to_var trg_decl) of
+              (SOME src_var, SOME trg_var) => (src_var, trg_var) :: acc_i
+            | _ => acc_i)
+          acc
+          edge_arg)
       []
       edge_args
   (*TODO: *)

@@ -34,8 +34,9 @@ struct
     (* , target_entry_args : L4.args *)
     (* } *)
   (*maps*)
+  type BlockMap = L4.block Intmap.intmap
   type EdgeArgsMap = (TID, EdgeArgs) Binarymap.dict
-  type Cfg = (ID list * ID list) Intmap.intmap
+  type CFG = (ID list * ID list) Intmap.intmap
 
   (*orders*)
   fun tuple_id_ord ((b1, i1) : TID, (b2, i2) : TID) : order =
@@ -70,21 +71,21 @@ struct
     let val (_, _, (exit_args, _, _)) = block in exit_args end
     | get_block_decls (block : L4.block, Entries: Dir) : L4.decl list =
     let val ((_, entry_args, _), _, _) = block in entry_args end
-  fun get_block_vars (block : L4.block, Exits: Dir) : Var list =
-    let val (_, _, (exit_args, _, _)) = block in List.mapPartial from_decl_to_var exit_args end
-    | get_block_vars (block : L4.block, Entries: Dir) : Var list =
-    let val ((_, entry_args, _), _, _) = block in List.mapPartial from_decl_to_var entry_args end
+  fun get_block_vars (block : L4.block, Exits: Dir) : VarSet =
+    let val (_, _, (exit_args, _, _)) = block in from_decllist_to_varset exit_args end
+    | get_block_vars (block : L4.block, Entries: Dir) : VarSet =
+    let val ((_, entry_args, _), _, _) = block in from_decllist_to_varset entry_args end
   
 
   (*mappers*)
   fun map_id_to_block
     (blocks : L4.block list) 
-    : L4.block Intmap.intmap =
+    : BlockMap =
     let
       (*IDs are just ascending from 0 in the order they are plucked from the block list*)
       fun add_block 
-        (block : L4.block, (next_id, id_map) : ID * L4.block Intmap.intmap)
-        : ID * L4.block Intmap.intmap =
+        (block : L4.block, (next_id, id_map) : ID * BlockMap)
+        : ID * BlockMap =
         (next_id + 1, Intmap.insert (id_map, next_id, block))
 
       val block_map_accum = (0, Intmap.empty())
@@ -97,7 +98,7 @@ struct
     end
 
   fun map_label_to_id
-    (block_map : L4.block Intmap.intmap, dir : Dir)
+    (block_map : BlockMap, dir : Dir)
     : (Label, ID) Binarymap.dict =
     let
       (*inserts mapping for a single block due to potential multi-entry.
@@ -126,4 +127,3 @@ struct
 
 
 end
-

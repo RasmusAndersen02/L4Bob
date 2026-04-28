@@ -27,7 +27,7 @@ fun print_graph (graph : L4interference.IGraph) : unit =
 
 fun run_for_function (function_name : string, blocks : L4.block list) : unit =
   let
-    val block_map = L4cfg.block_id_mapping blocks
+    val block_map = L4utils.map_id_to_block blocks
     val cfg = L4cfg.build_cfg blocks
     val edge_args = L4cfg.build_edge_args (block_map, cfg)
     val liveness = L4liveness.analyze (blocks, cfg, edge_args)
