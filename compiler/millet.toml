@@ -4,3 +4,4 @@ root = "sources.mlb"
 
 [diagnostics]
 5001.severity = "ignore"
+5028.severity = "ignore"

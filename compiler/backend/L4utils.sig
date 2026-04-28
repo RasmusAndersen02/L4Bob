@@ -23,13 +23,6 @@ sig
     , live_out : VarSet
     }
 
-  type EdgeArgs =
-    { source_exits_decl : L4.decl list
-    , target_entries_decl : L4.decl list
-    , source_exits : Var list
-    , target_entries : Var list
-    }
-
   type Boundary =
     { entry_vars_ordered : Var list
     , exit_vars_ordered : Var list
@@ -44,9 +37,16 @@ sig
     , lv : Live
     }
 
+  type EdgeArgs = (L4.decl * L4.decl) list
+    (* { source_exit_args : L4.args *)
+    (* , target_entry_args : L4.args *)
+    (* } *)
+
   (* maps *)
+  type BlockMap = L4.block Intmap.intmap
   type EdgeArgsMap = (TID, EdgeArgs) Binarymap.dict
-  type Cfg = (ID list * ID list) Intmap.intmap
+  type CFG = (ID list * ID list) Intmap.intmap
+
 
   (* orders *)
   val tuple_id_ord : TID * TID -> order
@@ -65,9 +65,9 @@ sig
   (* getters *)
   val get_block_labels : L4.block * Dir -> Label list
   val get_block_decls : L4.block * Dir -> L4.decl list
-  val get_block_vars : L4.block * Dir -> Var list
+  val get_block_vars : L4.block * Dir -> VarSet
 
   (* mappers *)
-  val map_id_to_block : L4.block list -> L4.block Intmap.intmap
-  val map_label_to_id : L4.block Intmap.intmap * Dir -> (Label, ID) Binarymap.dict
+  val map_id_to_block : L4.block list -> BlockMap
+  val map_label_to_id : BlockMap * Dir -> (Label, ID) Binarymap.dict
 end
